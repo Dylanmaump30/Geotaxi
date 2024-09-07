@@ -1,17 +1,27 @@
 name: Deploy
+
 on:
   push:
     branches:
-    - master
+      - master
+
 jobs:
   build:
     runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v2
 
-      - name: install dependencies
-        run: npm install
-      - name: run server
-        run: node index.js
-    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Especifica la versión de Python que necesitas
+
+      - name: Install dependencies
+        run: if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run server
+        run: ServWeb.py  # Reemplaza `your_script.py` con el nombre de tu script Python
+
         
