@@ -14,7 +14,7 @@ def create_mysql_connection():
             host='geotaxi.cxeui44s4lo7.us-east-1.rds.amazonaws.com',  # Cambia esto por el endpoint real de tu RDS
             user='geotaxi',  # Cambia esto por tu usuario de RDS
             password='geotaxi1234',  # Cambia esto por tu contraseña de RDS
-            database='gpsuninorte'
+            database='geotaxi_db'
         )
         if connection.is_connected():
             print("Conectado a MySQL en RDS")
@@ -23,31 +23,31 @@ def create_mysql_connection():
         print(f"Error al conectar a MySQL: {e}")
     return None
 
-def setup_database():
-    """Configura la base de datos y la tabla necesarias."""
-    connection = create_mysql_connection()
-    if connection:
-        try:
-            cursor = connection.cursor()
-            cursor.execute("CREATE DATABASE IF NOT EXISTS gpsuninorte")
-            print("Base de datos 'gpsuninorte' creada o ya existía.")
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS ubicaciones (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    latitud VARCHAR(255),
-                    longitud VARCHAR(255),
-                    fecha DATE,
-                    hora TIME
-                )
-            ''')
-            print("Tabla 'ubicaciones' creada o ya existía.")
-            connection.commit()
-        except Error as e:
-            print(f"Error al configurar la base de datos: {e}")
-        finally:
-            cursor.close()
-            connection.close()
-            print("Conexión a MySQL cerrada después de la configuración.")
+#def setup_database():
+  #  """Configura la base de datos y la tabla necesarias."""
+   # connection = create_mysql_connection()
+    #if connection:
+     #   try:
+      #      cursor = connection.cursor()
+       #     cursor.execute("CREATE DATABASE IF NOT EXISTS gpsuninorte")
+        #    print("Base de datos 'gpsuninorte' creada o ya existía.")
+         #   cursor.execute('''
+          #      CREATE TABLE IF NOT EXISTS ubicaciones (
+           #         id INT AUTO_INCREMENT PRIMARY KEY,
+            #        latitud VARCHAR(255),
+             #       longitud VARCHAR(255),
+              #      fecha DATE,
+               #     hora TIME
+                #)
+            #''')
+            #print("Tabla 'ubicaciones' creada o ya existía.")
+            #connection.commit()
+        #except Error as e:
+         #   print(f"Error al configurar la base de datos: {e}")
+        #finally:
+         #   cursor.close()
+          #  connection.close()
+          #  print("Conexión a MySQL cerrada después de la configuración.")
 
 def handle_tcp_connection():
     """Maneja conexiones TCP y guarda ubicaciones en la base de datos."""
