@@ -1,5 +1,3 @@
-import http.server
-import socketserver
 import socket
 import threading
 import mysql.connector
@@ -9,17 +7,17 @@ import re
 
 last_saved_time = None
 
-def create_mysql_connection():  
-    """Establece una conexión a MySQL."""
+def create_mysql_connection():
+    """Establece una conexión a MySQL en RDS."""
     try:
         connection = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='1234567',
+            host='geotaxi.cxeui44s4lo7.us-east-1.rds.amazonaws.com',  # Cambia esto por el endpoint real de tu RDS
+            user='geotaxi',  # Cambia esto por tu usuario de RDS
+            password='geotaxi1234',  # Cambia esto por tu contraseña de RDS
             database='gpsuninorte'
         )
         if connection.is_connected():
-            print("Conectado a MySQL")
+            print("Conectado a MySQL en RDS")
             return connection
     except Error as e:
         print(f"Error al conectar a MySQL: {e}")
@@ -33,7 +31,6 @@ def setup_database():
             cursor = connection.cursor()
             cursor.execute("CREATE DATABASE IF NOT EXISTS gpsuninorte")
             print("Base de datos 'gpsuninorte' creada o ya existía.")
-            #cursor.execute("USE gpsuninorte")
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS ubicaciones (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -55,41 +52,43 @@ def setup_database():
 def handle_tcp_connection():
     """Maneja conexiones TCP y guarda ubicaciones en la base de datos."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp_socket:
-        tcp_socket.bind(("", 16000)) 
+        tcp_socket.bind(("", 16000))
         tcp_socket.listen()
         print("Servidor TCP escuchando en el puerto 16000")
 
         while True:
-            conn, addr = tcp_socket.accept()  
+            conn, addr = tcp_socket.accept()
             print(f"Conectado por {addr}")
-            threading.Thread(target=handle_client, args=(conn,)).start() 
+            threading.Thread(target=handle_client, args=(conn,)).start()
 
 def handle_client(conn):
     """Maneja la conexión de un cliente."""
     with conn:
         while True:
             data = conn.recv(1024).decode().strip()
-            if not data:  
+            if not data:
                 break
-            print(f"Datos recibidos: '{data}'")  
+            print(f"Datos recibidos: '{data}'")
 
-            match = re.match(r'Latitude:\s*(-?\d+\.\d+)\s+Longitude:\s*(-?\d+\.\d+)\s+Timestamp:\s*(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})', data)
-            
+            match = re.match(
+                r'Latitude:\s*(-?\d+\.\d+)\s+Longitude:\s*(-?\d+\.\d+)\s+Timestamp:\s*(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})',
+                data
+            )
+
             if match:
                 latitud, longitud, fecha, hora = match.groups()
                 save_location(latitud, longitud, fecha, hora)
-                conn.sendall(b"Datos recibidos y guardados.")  
+                conn.sendall(b"Datos recibidos y guardados.")
             else:
                 print("Datos recibidos en formato incorrecto.")
                 conn.sendall(b"Formato de datos incorrecto.")
 
 def save_location(latitud, longitud, fecha, hora):
     """Guarda la ubicación recibida en la base de datos cada 10 segundos."""
-    global last_saved_time  
+    global last_saved_time
 
     print(f"Guardando ubicación: latitud={latitud}, longitud={longitud}, fecha={fecha}, hora={hora}")
 
-   
     current_time = datetime.strptime(f"{fecha} {hora}", "%Y-%m-%d %H:%M:%S")
 
     if last_saved_time is None or (current_time - last_saved_time) >= timedelta(seconds=10):
@@ -122,160 +121,11 @@ def save_location(latitud, longitud, fecha, hora):
     else:
         print(f"Ubicación recibida dentro de los últimos 10 segundos. No se guarda.")
 
-class MyHandler(http.server.SimpleHTTPRequestHandler):
-    """HTTP"""
-    
-    def do_GET(self):
-        if self.path == "/":
-            self.handle_latest_location()
-        elif self.path == "/all":
-            self.handle_all_locations()
-        else:
-            self.handle_default()
-
-    def handle_latest_location(self):
-        """Muestra la última ubicación almacenada."""
-        connection = create_mysql_connection()
-        if connection:
-            try:
-                cursor = connection.cursor()
-                cursor.execute('SELECT latitud, longitud, fecha, hora FROM ubicaciones ORDER BY id DESC LIMIT 1')
-                result = cursor.fetchone()
-
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
-
-                response_content = """
-                <html>
-                <head>
-                    <title>Geotaxi</title>
-                    <script>
-                        function fetchLatestLocation() {
-                            fetch('/')
-                                .then(response => response.text())
-                                .then(html => {
-                                    let parser = new DOMParser();
-                                    let doc = parser.parseFromString(html, 'text/html');
-                                    let newContent = doc.getElementById('content').innerHTML;
-                                    let link = doc.getElementById('history-link').innerHTML;
-                                    document.getElementById('content').innerHTML = newContent;
-                                    document.getElementById('history-link').innerHTML = link;
-                                });
-                        }
-                        setInterval(fetchLatestLocation, 10000); // Actualiza cada 10 segundos
-                    </script>
-                </head>
-                <body>
-                    <div id="content">
-                """
-
-                if result:
-                    latitud, longitud, fecha, hora = result
-                    response_content += f"""
-                        <p><strong>Latitud:</strong> {latitud}</p>
-                        <p><strong>Longitud:</strong> {longitud}</p>
-                        <p><strong>Fecha:</strong> {fecha}</p>
-                        <p><strong>Hora:</strong> {hora}</p>
-                    """
-                else:
-                    response_content += """
-                        <p>No hay datos disponibles.</p>
-                    """
-
-                response_content += """
-                    </div>
-                    <div id="history-link">
-                        <p><a href="/all">Ver historial de ubicaciones</a></p>
-                    </div>
-                </body>
-                </html>
-                """
-
-                self.wfile.write(response_content.encode())
-            except Error as e:
-                print(f"Error al obtener la última ubicación: {e}")
-            finally:
-                cursor.close()
-                connection.close()
-                print("Conexión a MySQL cerrada después de manejar la solicitud HTTP.")
-
-    def handle_all_locations(self):
-        """Muestra todas las ubicaciones almacenadas en la base de datos."""
-        connection = create_mysql_connection()
-        if connection:
-            try:
-                cursor = connection.cursor()
-                cursor.execute('SELECT latitud, longitud, fecha, hora FROM ubicaciones ORDER BY id DESC')
-                results = cursor.fetchall()
-
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
-
-                response_content = """
-                <html>
-                <head>
-                    <title>Historial - Geotaxi</title>
-                </head>
-                <body>
-                    <h1>Historial de ubicaciones</h1>
-                    <table border="1">
-                        <tr>
-                            <th>Latitud</th>
-                            <th>Longitud</th>
-                            <th>Fecha</th>
-                            <th>Hora</th>
-                        </tr>
-                """
-
-                for (latitud, longitud, fecha, hora) in results:
-                    response_content += f"""
-                        <tr>
-                            <td>{latitud}</td>
-                            <td>{longitud}</td>
-                            <td>{fecha}</td>
-                            <td>{hora}</td>
-                        </tr>
-                    """
-
-                response_content += """
-                    </table>
-                    <p><a href="/">Volver a la ultima ubicacion</a></p>
-                </body>
-                </html>
-                """
-
-                self.wfile.write(response_content.encode())
-            except Error as e:
-                print(f"Error al obtener todas las ubicaciones: {e}")
-            finally:
-                cursor.close()
-                connection.close()
-                print("Conexión a MySQL cerrada después de manejar la solicitud HTTP.")
-
-    def handle_default(self):
-        """Redirige a la página principal si la ruta no es reconocida."""
-        self.send_response(302)
-        self.send_header("Location", "/")
-        self.end_headers()
-
-
-
-def start_web_server():
-    """Inicia el servidor web en el puerto 20000."""
-    with socketserver.TCPServer(("0.0.0.0", 20000), MyHandler) as httpd:
-        print("Servidor Web corriendo en el puerto 20000")
-        httpd.serve_forever()
-
 if __name__ == "__main__":
     setup_database()
 
     tcp_thread = threading.Thread(target=handle_tcp_connection, daemon=True)
-    web_thread = threading.Thread(target=start_web_server, daemon=True)
 
     tcp_thread.start()
-    web_thread.start()
 
     tcp_thread.join()
-    web_thread.join()
