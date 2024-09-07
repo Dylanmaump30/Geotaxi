@@ -9,6 +9,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: PM2 Restart Service
-        run: echo "deployment"
+      - name: install dependencies
+        run: npm install
+      - name: run server
+        run: node index.js
+    
         
