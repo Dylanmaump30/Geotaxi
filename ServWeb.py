@@ -14,9 +14,9 @@ def create_mysql_connection():
     """Establece una conexión a MySQL."""
     try:
         connection = mysql.connector.connect(
-            host='geotaxi.cxeui44s4lo7.us-east-1.rds.amazonaws.com',
-            user='geotaxi',
-            password='geotaxi1234',
+            host='ENDPOINT_RDS',
+            user='USER_RDS',
+            password='PASSWORD_RDS',
             database='geotaxi_db'
         )
         if connection.is_connected():
