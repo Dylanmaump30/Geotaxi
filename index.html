@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Geotaxi Real-Time Ubication</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAE20PFwak54XlxC7xidSaGgXVWjk-w_QQ&callback=initMap" async defer></script>
+    <style>
+      /* Tamaño del mapa */
+      #map {
+        height: 100%;
+      }
+      /* Asegurarse de que el cuerpo y el HTML ocupen el 100% del tamaño */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      let map;
+      let marker;
+      let reconnectInterval = 1000; // Intervalo inicial de reconexión de 1 segundo
+      let socket; // Define el socket fuera de las funciones para poder reutilizarlo
+      let reconnectAttempts = 0; // Contador de intentos de reconexión
+      const MAX_ATTEMPTS = 5; // Máximo número de intentos de reconexión
+
+      function initializeWebSocket() {
+        if (reconnectAttempts >= MAX_ATTEMPTS) {
+          console.log("Número máximo de intentos de reconexión alcanzado");
+          return; // Sale si se han alcanzado los intentos máximos
+        }
+
+        socket = new WebSocket('ws://34.224.102.36:20000');
+
+        socket.onopen = function(event) {
+          console.log("Conectado al WebSocket");
+          reconnectInterval = 1000; // Reinicia el intervalo de reconexión después de una conexión exitosa
+          reconnectAttempts = 0; // Reinicia el contador de intentos al conectarse
+        };
+
+        socket.onmessage = function(event) {
+          console.log("Mensaje recibido del WebSocket:", event.data);
+          let data = JSON.parse(event.data);
+          let latLng = new google.maps.LatLng(parseFloat(data.latitud), parseFloat(data.longitud));
+
+          if (!marker) {
+            // Crea el marcador si no existe
+            marker = new google.maps.Marker({
+              position: latLng,
+              map: map
+            });
+          } else {
+            // Actualiza la posición del marcador si ya existe
+            marker.setPosition(latLng);
+          }
+
+          map.panTo(latLng);
+        };
+
+        socket.onerror = function(event) {
+          console.error("Error de WebSocket:", event);
+        };
+
+        socket.onclose = function(event) {
+          console.log("WebSocket cerrado:", event);
+          reconnectAttempts++;
+          console.log(`Intento de reconexión: ${reconnectAttempts}`);
+          setTimeout(initializeWebSocket, reconnectInterval);
+          reconnectInterval = Math.min(reconnectInterval * 2, 60000); // Incremento exponencial del intervalo hasta un máximo de 1 minuto
+        };
+      }
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: -34.397, lng: 150.644},
+          zoom: 8
+        });
+
+        // Elimina el marcador inicial
+        //marker = new google.maps.Marker({
+        //  position: {lat: -34.397, lng: 150.644},
+        //  map: map
+        //});
+
+        initializeWebSocket(); // Inicializa el WebSocket cuando se carga el mapa
+      }
+    </script>
+  </body>
+</html>
+
+
