@@ -4,88 +4,63 @@ import mysql.connector
 from mysql.connector import Error
 from datetime import datetime, timedelta
 import re
+import json
+from websocket_server import WebsocketServer
 
 last_saved_time = None
+clients = []
 
-def create_mysql_connection():
-    """Establece una conexión a MySQL en RDS."""
+def create_mysql_connection():  
+    """Establece una conexión a MySQL."""
     try:
         connection = mysql.connector.connect(
-            host='geotaxi.cxeui44s4lo7.us-east-1.rds.amazonaws.com',  # Cambia esto por el endpoint real de tu RDS
-            user='geotaxi',  # Cambia esto por tu usuario de RDS
-            password='geotaxi1234',  # Cambia esto por tu contraseña de RDS
+            host='geotaxi.cxeui44s4lo7.us-east-1.rds.amazonaws.com',
+            user='geotaxi',
+            password='geotaxi1234',
             database='geotaxi_db'
         )
         if connection.is_connected():
-            print("Conectado a MySQL en RDS")
+            print("Conectado a MySQL")
             return connection
     except Error as e:
         print(f"Error al conectar a MySQL: {e}")
     return None
 
-#def setup_database():
-  #  """Configura la base de datos y la tabla necesarias."""
-   # connection = create_mysql_connection()
-    #if connection:
-     #   try:
-      #      cursor = connection.cursor()
-       #     cursor.execute("CREATE DATABASE IF NOT EXISTS gpsuninorte")
-        #    print("Base de datos 'gpsuninorte' creada o ya existía.")
-         #   cursor.execute('''
-          #      CREATE TABLE IF NOT EXISTS ubicaciones (
-           #         id INT AUTO_INCREMENT PRIMARY KEY,
-            #        latitud VARCHAR(255),
-             #       longitud VARCHAR(255),
-              #      fecha DATE,
-               #     hora TIME
-                #)
-            #''')
-            #print("Tabla 'ubicaciones' creada o ya existía.")
-            #connection.commit()
-        #except Error as e:
-         #   print(f"Error al configurar la base de datos: {e}")
-        #finally:
-         #   cursor.close()
-          #  connection.close()
-          #  print("Conexión a MySQL cerrada después de la configuración.")
-
 def handle_tcp_connection():
     """Maneja conexiones TCP y guarda ubicaciones en la base de datos."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp_socket:
-        tcp_socket.bind(("", 16000))
+        tcp_socket.bind(("", 16000)) 
         tcp_socket.listen()
         print("Servidor TCP escuchando en el puerto 16000")
 
         while True:
-            conn, addr = tcp_socket.accept()
+            conn, addr = tcp_socket.accept()  
             print(f"Conectado por {addr}")
-            threading.Thread(target=handle_client, args=(conn,)).start()
+            threading.Thread(target=handle_client, args=(conn,)).start() 
 
 def handle_client(conn):
     """Maneja la conexión de un cliente."""
     with conn:
         while True:
             data = conn.recv(1024).decode().strip()
-            if not data:
+            if not data:  
                 break
-            print(f"Datos recibidos: '{data}'")
+            print(f"Datos recibidos: '{data}'")  
 
-            match = re.match(
-                r'Latitude:\s*(-?\d+\.\d+)\s+Longitude:\s*(-?\d+\.\d+)\s+Timestamp:\s*(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})',
-                data
-            )
-
+            match = re.match(r'Latitude:\s*(-?\d+\.\d+)\s+Longitude:\s*(-?\d+\.\d+)\s+Timestamp:\s*(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})', data)
+            
             if match:
                 latitud, longitud, fecha, hora = match.groups()
                 save_location(latitud, longitud, fecha, hora)
-                conn.sendall(b"Datos recibidos y guardados.")
+                notify_clients(latitud, longitud, fecha, hora)
+                conn.sendall(b"Datos recibidos y guardados.")  
             else:
                 print("Datos recibidos en formato incorrecto.")
                 conn.sendall(b"Formato de datos incorrecto.")
 
 def save_location(latitud, longitud, fecha, hora):
     """Guarda la ubicación recibida en la base de datos cada 10 segundos."""
-    global last_saved_time
+    global last_saved_time  
 
     print(f"Guardando ubicación: latitud={latitud}, longitud={longitud}, fecha={fecha}, hora={hora}")
 
@@ -121,11 +96,46 @@ def save_location(latitud, longitud, fecha, hora):
     else:
         print(f"Ubicación recibida dentro de los últimos 10 segundos. No se guarda.")
 
-if __name__ == "__main__":
-    setup_database()
+def notify_clients(latitud, longitud, fecha, hora):
+    """Notifica a los clientes conectados via WebSocket."""
+    for client in clients:
+        server.send_message(client, json.dumps({
+            'latitud': latitud,
+            'longitud': longitud,
+            'fecha': fecha,
+            'hora': hora
+        }))
 
+def start_websocket():
+    """Inicia el servidor WebSocket."""
+    global server
+    server = WebsocketServer(host='0.0.0.0', port=20000)
+    server.set_fn_new_client(new_client)
+    server.set_fn_client_left(client_left)
+    server.set_fn_message_received(message_received)
+    print("Servidor WebSocket corriendo en el puerto 8000")
+    server.run_forever()
+
+def new_client(client, server):
+    """Agrega nuevo cliente a la lista."""
+    clients.append(client)
+    print("Nuevo cliente conectado y agregado a la lista.")
+
+def client_left(client, server):
+    """Elimina el cliente de la lista."""
+    clients.remove(client)
+    print("Cliente desconectado y eliminado de la lista.")
+
+def message_received(client, server, message):
+    """Procesa mensajes recibidos (si aplica)."""
+    pass
+
+if __name__ == "__main__":
     tcp_thread = threading.Thread(target=handle_tcp_connection, daemon=True)
+    ws_thread = threading.Thread(target=start_websocket, daemon=True)
 
     tcp_thread.start()
+    ws_thread.start()
 
     tcp_thread.join()
+    ws_thread.join()
