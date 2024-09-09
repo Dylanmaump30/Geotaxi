@@ -32,7 +32,7 @@
           return; // Sale si se han alcanzado los intentos máximos
         }
 
-        socket = new WebSocket('ws://34.224.102.36:20000');
+        socket = new WebSocket('ws://awsip:20000');
 
         socket.onopen = function(event) {
           console.log("Conectado al WebSocket");
