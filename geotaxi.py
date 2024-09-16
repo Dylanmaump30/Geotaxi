@@ -23,10 +23,10 @@ save_lock = asyncio.Lock()
 connection_pool = pooling.MySQLConnectionPool(
     pool_name="mypool",
     pool_size=10,
-    host='geotaxi.cxeui44s4lo7.us-east-1.rds.amazonaws.com',
-    user='geotaxi',
-    password='geotaxi1234',
-    database='geotaxi_db'
+    host='ENDPOINT',
+    user='USER',
+    password='PASSWORD',
+    database='DATABASE'
 )
 
 # Configuración del Throttle para WebSocket
