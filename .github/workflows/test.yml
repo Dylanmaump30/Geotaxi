@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: Geotaxi  # Usa la etiqueta del runner configurado
+    runs-on: self-hosted  # Usa la etiqueta del runner configurado
 
     steps:
       - name: Checkout code
