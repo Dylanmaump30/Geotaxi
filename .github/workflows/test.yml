@@ -23,7 +23,7 @@ jobs:
         run: |
           cp -R * ~/actions-runner/_work/Geotaxi/Geotaxi_new/
       
-      # Paso 4: Listar archivos para asegurar que 'requirements.txt' está en su lugar
+      # Paso 4: Listar archivos para asegurar que 'requirements.txt' esté en su lugar
       - name: List files in Geotaxi_new
         run: |
           ls -la ~/actions-runner/_work/Geotaxi/Geotaxi_new/
@@ -45,17 +45,21 @@ jobs:
             echo "requirements.txt no encontrado"; 
           fi
 
-      # Paso 7: Establecer variables de entorno
-      - name: Set environment variables
+      # Paso 7: Establecer variables de entorno e imprimirlas para depuración
+      - name: Print environment variables for debugging
         run: |
-          echo "ENDPOINT='geotaxi.cxeui44s4lo7.us-east-1.rds.amazonaws.com'" >> $GITHUB_ENV
-          echo "DB_USER='geotaxi'" >> $GITHUB_ENV
-          echo "DB_PASSWORD='geotaxi1234'" >> $GITHUB_ENV
+          echo "ENDPOINT: $DB_ENDPOINT"
+          echo "USER: $DB_USER"
+          echo "PASSWORD: $DB_PASSWORD"
+        env:
+          DB_ENDPOINT: ${{ secrets.DB_ENDPOINT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       
-      # Paso 8: Ejecutar el script Python usando el entorno virtual
+      # Paso 8: Ejecutar el script Python usando el entorno virtual, con las variables de entorno del secreto
       - name: Run Python script
         env:
-          ENDPOINT: ${{ secrets.DB_ENDPOINT }}
+          DB_ENDPOINT: ${{ secrets.DB_ENDPOINT }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
@@ -67,4 +71,3 @@ jobs:
         run: |
           cd ~/actions-runner/_work/Geotaxi/Geotaxi_new
           ls -la  # Lista los archivos para confirmar que index.html está allí
-
