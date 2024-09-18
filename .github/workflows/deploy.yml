@@ -1,59 +1,22 @@
-name: CI/CD Pipeline for Python and JS
+name: Test Runner
 
 on:
-  pull_request:
-    branches:
-      - main
-
   push:
     branches:
-      - main
+      - master
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: Dylan  # Usa la etiqueta del runner configurado
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Run Python tests
-      run: pytest
-
-    - name: Lint JavaScript files
-      run: |
-        npm install eslint
-        npx eslint ./static/app.js
-
-  deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Deploy to server
-      uses: appleboy/ssh-action@v0.1.0
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
-        script: |
-          cd "D:\Universidad del Norte - Martin Pinedo\VIII SEMESTRE\DISEÑO ELECTRONICO\Proyecto 2\Geotaxi\.github\workflows"
-          git pull origin main
-          pip install -r requirements.txt
-          systemctl restart your-python-service
+      - name: Run simple command
+        run: |
+          mkdir -p _work/test_folder
+          echo "Hello, world!" > _work/test_folder/hello.txt
+          cat _work/test_folder/hello.txt
 
         
