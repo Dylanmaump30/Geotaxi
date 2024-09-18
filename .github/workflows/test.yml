@@ -44,28 +44,6 @@ jobs:
           else 
             echo "requirements.txt no encontrado"; 
           fi
-
-      # Paso 7: Establecer variables de entorno e imprimirlas para depuración
-      - name: Print environment variables for debugging
-        run: |
-          echo "ENDPOINT: $DB_ENDPOINT"
-          echo "USER: $DB_USER"
-          echo "PASSWORD: $DB_PASSWORD"
-        env:
-          DB_ENDPOINT: ${{ secrets.DB_ENDPOINT }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      
-      # Paso 8: Ejecutar el script Python usando el entorno virtual, con las variables de entorno del secreto
-      - name: Run Python script
-        env:
-          DB_ENDPOINT: ${{ secrets.DB_ENDPOINT }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        run: |
-          source ~/actions-runner/_work/Geotaxi/Geotaxi_new/venv/bin/activate
-          python ~/actions-runner/_work/Geotaxi/Geotaxi_new/geotaxi.py  # Reemplaza 'geotaxi.py' con el nombre de tu script Python
-
       # Paso 9: Verificar que el archivo index.html esté en la ubicación correcta
       - name: Verify index.html
         run: |
