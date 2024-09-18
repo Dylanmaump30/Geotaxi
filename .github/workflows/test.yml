@@ -18,12 +18,12 @@ jobs:
       - name: Create application directory
         run: mkdir -p /home/ubuntu/actions-runner/_work/Geotaxi/Geotaxi/Geotaxi_new
 
-      # Paso 3: Copiar los archivos al nuevo directorio de la aplicación en la instancia
-      - name: Move code to application directory
+      # Paso 3: Copiar los archivos al nuevo directorio de la aplicación en la instancia excluyendo el directorio de destino
+      - name: Move code to application directory excluding destination directory
         run: |
-          cp -R * /home/ubuntu/actions-runner/_work/Geotaxi/Geotaxi/Geotaxi_new/
+          rsync -av --progress --exclude='Geotaxi_new' * /home/ubuntu/actions-runner/_work/Geotaxi/Geotaxi/Geotaxi_new/
           echo "Copied files to Geotaxi_new directory"
-      
+
       # Paso 4: Listar archivos para asegurar que 'index.html' esté en su lugar
       - name: List files in Geotaxi_new
         run: |
