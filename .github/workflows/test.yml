@@ -14,25 +14,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Paso 2: Copiar los archivos al directorio de la aplicación en la instancia
+      # Paso 2: Crear un nuevo directorio para evitar conflicto
+      - name: Create application directory
+        run: mkdir -p ~/actions-runner/_work/Geotaxi/Geotaxi_new
+
+      # Paso 3: Copiar los archivos al nuevo directorio de la aplicación en la instancia
       - name: Move code to application directory
         run: |
-          cp -R . ~/actions-runner/_work/Geotaxi/Geotaxi/
+          cp -R * ~/actions-runner/_work/Geotaxi/Geotaxi_new/
 
-      # Paso 3: Instalar dependencias de Python (si es necesario)
+      # Paso 4: Instalar dependencias de Python (si es necesario)
       - name: Install dependencies
         run: |
-          cd ~/actions-runner/_work/Geotaxi/Geotaxi
+          cd ~/actions-runner/_work/Geotaxi/Geotaxi_new
           pip install -r requirements.txt  # Instala dependencias si es necesario
 
-      # Paso 4: Ejecutar el script Python
+      # Paso 5: Ejecutar el script Python
       - name: Run Python script
         run: |
-          cd ~/actions-runner/_work/Geotaxi/Geotaxi
+          cd ~/actions-runner/_work/Geotaxi/Geotaxi_new
           python geotaxi.py  # Reemplaza 'main.py' con el nombre de tu script Python
 
-      # Paso 5: Verificar que el archivo index.html esté en la ubicación correcta
+      # Paso 6: Verificar que el archivo index.html esté en la ubicación correcta
       - name: Verify index.html
         run: |
-          cd ~/actions-runner/_work/Geotaxi/Geotaxi
+          cd ~/actions-runner/_work/Geotaxi/Geotaxi_new
           ls -la  # Lista los archivos para confirmar que index.html está allí
