@@ -32,9 +32,9 @@ jobs:
       # Paso 5: Instalar dependencias de Python en el entorno virtual
       - name: Install dependencies
         run: |
-          source ~/actions-runner/_work/Geotaxi/venv/bin/activate
+          source ~/actions-runner/_work/Geotaxi/Geotaxi/venv/bin/activate
           pip install --upgrade pip  # Asegurarse de tener la última versión de pip
-          pip install -r ~/actions-runner/_work/Geotaxi/requirements.txt  # Instala dependencias
+          pip install -r ~/actions-runner/_work/Geotaxi/Geotaxi/requirements.txt  # Instala dependencias
 
       # Paso 6: Ejecutar el script Python usando el entorno virtual
       - name: Run Python script
