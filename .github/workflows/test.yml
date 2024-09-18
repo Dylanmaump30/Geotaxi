@@ -6,15 +6,33 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: self-hosted  # Usa la etiqueta del runner configurado
+  deploy:
+    runs-on: self-hosted  # Usa tu propio runner
 
     steps:
+      # Paso 1: Checkout del código desde el repositorio
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Run simple command
+      # Paso 2: Copiar los archivos al directorio de la aplicación en la instancia
+      - name: Move code to application directory
         run: |
-          mkdir -p _work/test_folder
-          echo "Hello, world!" > _work/test_folder/hello.txt
-          cat _work/test_folder/hello.txt
+          cp -R . ~/actions-runner/_work/Geotaxi/Geotaxi/
+
+      # Paso 3: Instalar dependencias de Python (si es necesario)
+      - name: Install dependencies
+        run: |
+          cd ~/actions-runner/_work/Geotaxi/Geotaxi
+          pip install -r requirements.txt  # Instala dependencias si es necesario
+
+      # Paso 4: Ejecutar el script Python
+      - name: Run Python script
+        run: |
+          cd ~/actions-runner/_work/Geotaxi/Geotaxi
+          python main.py  # Reemplaza 'main.py' con el nombre de tu script Python
+
+      # Paso 5: Verificar que el archivo index.html esté en la ubicación correcta
+      - name: Verify index.html
+        run: |
+          cd ~/actions-runner/_work/Geotaxi/Geotaxi
+          ls -la  # Lista los archivos para confirmar que index.html está allí
