@@ -2,13 +2,13 @@
 <html>
   <head>
     <title>Geotaxi Real-Time Ubication</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=CLAVEAPI&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAE20PFwak54XlxC7xidSaGgXVWjk-w_QQ&callback=initMap" async defer></script>
     <style>
-      /* Tamaño del mapa */
+      /* Tamano del mapa */
       #map {
         height: 100%;
       }
-      /* Asegurarse de que el cuerpo y el HTML ocupen el 100% del tamaño */
+      /* Asegurarse de que el cuerpo y el HTML ocupen el 100% del tamano */
       html, body {
         height: 100%;
         margin: 0;
@@ -21,22 +21,26 @@
     <script>
       let map;
       let marker;
-      let reconnectInterval = 1000; // Intervalo inicial de reconexión de 1 segundo
+      let pathCoordinates = [];  // Array para almacenar las coordenadas del recorrido
+      let pathPolyline;  // Variable para almacenar la línea del recorrido
+      let reconnectInterval = 1000; // Intervalo inicial de reconexion de 1 segundo
       let socket; // Define el socket fuera de las funciones para poder reutilizarlo
-      let reconnectAttempts = 0; // Contador de intentos de reconexión
-      const MAX_ATTEMPTS = 5; // Máximo número de intentos de reconexión
+      let reconnectAttempts = 0; // Contador de intentos de reconexion
+      const MAX_ATTEMPTS = 5; // Maximo numero de intentos de reconexion
+      let lastUpdateTime = null;  // Almacena el ultimo timestamp recibido
+      let mapInitialized = false; // Bandera para indicar si el mapa ha sido centrado
 
       function initializeWebSocket() {
         if (reconnectAttempts >= MAX_ATTEMPTS) {
-          console.log("Número máximo de intentos de reconexión alcanzado");
-          return; // Sale si se han alcanzado los intentos máximos
+          console.log("Numero maximo de intentos de reconexion alcanzado");
+          return; // Sale si se han alcanzado los intentos maximos
         }
 
-        socket = new WebSocket('ws://awsip:20000');
+        socket = new WebSocket('ws://34.224.102.36:20000');
 
         socket.onopen = function(event) {
           console.log("Conectado al WebSocket");
-          reconnectInterval = 1000; // Reinicia el intervalo de reconexión después de una conexión exitosa
+          reconnectInterval = 1000; // Reinicia el intervalo de reconexion despues de una conexion exitosa
           reconnectAttempts = 0; // Reinicia el contador de intentos al conectarse
         };
 
@@ -44,49 +48,80 @@
           console.log("Mensaje recibido del WebSocket:", event.data);
           let data = JSON.parse(event.data);
           let latLng = new google.maps.LatLng(parseFloat(data.latitud), parseFloat(data.longitud));
+          
+          // Verifica si han pasado 10 segundos desde la ultima actualizacion
+          let currentTime = new Date(`${data.fecha}T${data.hora}`);
+          if (!lastUpdateTime || (currentTime - lastUpdateTime) >= 10000) {
+            lastUpdateTime = currentTime;
 
-          if (!marker) {
-            // Crea el marcador si no existe
-            marker = new google.maps.Marker({
-              position: latLng,
-              map: map
-            });
-          } else {
-            // Actualiza la posición del marcador si ya existe
-            marker.setPosition(latLng);
+            // Si no existe un marcador, crea uno
+            if (!marker) {
+              marker = new google.maps.Marker({
+                position: latLng,
+                map: map
+              });
+            } else {
+              // Actualiza la posicion del marcador si ya existe
+              marker.setPosition(latLng);
+            }
+
+            // Agrega la nueva posicion al array del recorrido
+            pathCoordinates.push(latLng);
+
+            // Si ya existe una linea, actualiza la ruta
+            if (pathPolyline) {
+              pathPolyline.setPath(pathCoordinates);
+            } else {
+              // Crea la linea si aun no existe
+              pathPolyline = new google.maps.Polyline({
+                path: pathCoordinates,
+                geodesic: true,
+                strokeColor: '#FF0000',
+                strokeOpacity: 1.0,
+                strokeWeight: 2,
+                map: map
+              });
+            }
+
+            // Centra el mapa en la nueva ubicacion solo si no se ha centrado antes
+            if (!mapInitialized) {
+              map.setCenter(latLng); // Centra el mapa en la primera ubicacion recibida
+              map.setZoom(15); // Ajusta el zoom a un nivel adecuado para ver el vehiculo
+              mapInitialized = true; // Cambia la bandera para evitar volver a centrarlo en actualizaciones futuras
+            }
+
+            // Centra el mapa en la nueva ubicacion en cada actualizacion
+            map.panTo(latLng);
           }
-
-          map.panTo(latLng);
         };
 
         socket.onerror = function(event) {
           console.error("Error de WebSocket:", event);
+          alert("Error de conexion. Intentando reconectar...");
         };
 
         socket.onclose = function(event) {
           console.log("WebSocket cerrado:", event);
           reconnectAttempts++;
-          console.log(`Intento de reconexión: ${reconnectAttempts}`);
+          console.log(`Intento de reconexion: ${reconnectAttempts}`);
           setTimeout(initializeWebSocket, reconnectInterval);
-          reconnectInterval = Math.min(reconnectInterval * 2, 60000); // Incremento exponencial del intervalo hasta un máximo de 1 minuto
+          reconnectInterval = Math.min(reconnectInterval * 2, 60000); // Incremento exponencial del intervalo hasta un maximo de 1 minuto
         };
       }
 
       function initMap() {
+        // Inicializa el mapa sin especificar una ubicacion inicial
         map = new google.maps.Map(document.getElementById('map'), {
-          center: {lat: -34.397, lng: 150.644},
-          zoom: 8
+          zoom: 2, // Zoom inicial bajo para mostrar una gran area, ajustara al recibir datos
         });
-
-        // Elimina el marcador inicial
-        //marker = new google.maps.Marker({
-        //  position: {lat: -34.397, lng: 150.644},
-        //  map: map
-        //});
 
         initializeWebSocket(); // Inicializa el WebSocket cuando se carga el mapa
       }
     </script>
+  </body>
+</html>
+
+
   </body>
 </html>
 
