@@ -22,30 +22,20 @@ jobs:
       - name: Move code to application directory
         run: |
           cp -R * ~/actions-runner/_work/Geotaxi/Geotaxi_new/
+          echo "Copied files to Geotaxi_new directory"
       
-      # Paso 4: Listar archivos para asegurar que 'requirements.txt' esté en su lugar
+      # Paso 4: Listar archivos para asegurar que 'index.html' esté en su lugar
       - name: List files in Geotaxi_new
         run: |
           ls -la ~/actions-runner/_work/Geotaxi/Geotaxi_new/
+          echo "Listed files in Geotaxi_new directory"
 
-      # Paso 5: Crear un entorno virtual
-      - name: Set up Python virtual environment
-        run: |
-          python3 -m venv ~/actions-runner/_work/Geotaxi/Geotaxi_new/venv
-          source ~/actions-runner/_work/Geotaxi/Geotaxi_new/venv/bin/activate
-
-      # Paso 6: Instalar dependencias de Python en el entorno virtual
-      - name: Install dependencies
-        run: |
-          source ~/actions-runner/_work/Geotaxi/Geotaxi_new/venv/bin/activate
-          pip install --upgrade pip  # Asegurarse de tener la última versión de pip
-          if [ -f ~/actions-runner/_work/Geotaxi/Geotaxi_new/requirements.txt ]; then 
-            pip install -r ~/actions-runner/_work/Geotaxi/Geotaxi_new/requirements.txt; 
-          else 
-            echo "requirements.txt no encontrado"; 
-          fi
-      # Paso 9: Verificar que el archivo index.html esté en la ubicación correcta
+      # Paso 5: Verificar que el archivo 'index.html' esté en la ubicación correcta
       - name: Verify index.html
         run: |
-          cd ~/actions-runner/_work/Geotaxi/Geotaxi_new
-          ls -la  # Lista los archivos para confirmar que index.html está allí
+          if [ -f ~/actions-runner/_work/Geotaxi/Geotaxi_new/index.html ]; then 
+            echo "index.html found. Verification successful.";
+          else 
+            echo "index.html not found. Verification failed."; 
+            exit 1; 
+          fi
