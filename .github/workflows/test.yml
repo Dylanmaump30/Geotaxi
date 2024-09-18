@@ -29,7 +29,7 @@ jobs:
       - name: Run Python script
         run: |
           cd ~/actions-runner/_work/Geotaxi/Geotaxi
-          python main.py  # Reemplaza 'main.py' con el nombre de tu script Python
+          python geotaxi.py  # Reemplaza 'main.py' con el nombre de tu script Python
 
       # Paso 5: Verificar que el archivo index.html esté en la ubicación correcta
       - name: Verify index.html
