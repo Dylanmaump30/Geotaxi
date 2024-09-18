@@ -23,20 +23,28 @@ jobs:
         run: |
           cp -R * ~/actions-runner/_work/Geotaxi/Geotaxi_new/
 
-      # Paso 4: Instalar dependencias de Python (si es necesario)
+      # Paso 4: Crear un entorno virtual
+      - name: Set up Python virtual environment
+        run: |
+          python3 -m venv ~/actions-runner/_work/Geotaxi/Geotaxi_new/venv
+          source ~/actions-runner/_work/Geotaxi/Geotaxi_new/venv/bin/activate
+
+      # Paso 5: Instalar dependencias de Python en el entorno virtual
       - name: Install dependencies
         run: |
-          cd ~/actions-runner/_work/Geotaxi/Geotaxi_new
-          pip install -r requirements.txt  # Instala dependencias si es necesario
+          source ~/actions-runner/_work/Geotaxi/Geotaxi_new/venv/bin/activate
+          pip install --upgrade pip  # Asegurarse de tener la última versión de pip
+          pip install -r ~/actions-runner/_work/Geotaxi/Geotaxi_new/requirements.txt  # Instala dependencias
 
-      # Paso 5: Ejecutar el script Python
+      # Paso 6: Ejecutar el script Python usando el entorno virtual
       - name: Run Python script
         run: |
-          cd ~/actions-runner/_work/Geotaxi/Geotaxi_new
-          python geotaxi.py  # Reemplaza 'main.py' con el nombre de tu script Python
+          source ~/actions-runner/_work/Geotaxi/Geotaxi_new/venv/bin/activate
+          python ~/actions-runner/_work/Geotaxi/Geotaxi_new/geotaxi.py  # Reemplaza 'geotaxi.py' con el nombre de tu script Python
 
-      # Paso 6: Verificar que el archivo index.html esté en la ubicación correcta
+      # Paso 7: Verificar que el archivo index.html esté en la ubicación correcta
       - name: Verify index.html
         run: |
           cd ~/actions-runner/_work/Geotaxi/Geotaxi_new
           ls -la  # Lista los archivos para confirmar que index.html está allí
+
