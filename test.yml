@@ -1,0 +1,20 @@
+name: Test Runner
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: Geotaxi  # Usa la etiqueta del runner configurado
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run simple command
+        run: |
+          mkdir -p _work/test_folder
+          echo "Hello, world!" > _work/test_folder/hello.txt
+          cat _work/test_folder/hello.txt
