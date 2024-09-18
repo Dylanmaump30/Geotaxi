@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Paso 2: Crear un nuevo directorio para evitar conflicto
+      # Paso 2: Crear un nuevo directorio para evitar conflictos
       - name: Create application directory
         run: mkdir -p ~/actions-runner/_work/Geotaxi/Geotaxi_new
 
@@ -22,27 +22,47 @@ jobs:
       - name: Move code to application directory
         run: |
           cp -R * ~/actions-runner/_work/Geotaxi/Geotaxi_new/
+      
+      # Paso 4: Listar archivos para asegurar que 'requirements.txt' está en su lugar
+      - name: List files in Geotaxi_new
+        run: |
+          ls -la ~/actions-runner/_work/Geotaxi/Geotaxi_new/
 
-      # Paso 4: Crear un entorno virtual
+      # Paso 5: Crear un entorno virtual
       - name: Set up Python virtual environment
         run: |
           python3 -m venv ~/actions-runner/_work/Geotaxi/Geotaxi_new/venv
           source ~/actions-runner/_work/Geotaxi/Geotaxi_new/venv/bin/activate
 
-      # Paso 5: Instalar dependencias de Python en el entorno virtual
+      # Paso 6: Instalar dependencias de Python en el entorno virtual
       - name: Install dependencies
         run: |
           source ~/actions-runner/_work/Geotaxi/Geotaxi_new/venv/bin/activate
           pip install --upgrade pip  # Asegurarse de tener la última versión de pip
-          pip install -r ~/actions-runner/_work/Geotaxi/Geotaxi_new/requirements.txt  # Instala dependencias
+          if [ -f ~/actions-runner/_work/Geotaxi/Geotaxi_new/requirements.txt ]; then 
+            pip install -r ~/actions-runner/_work/Geotaxi/Geotaxi_new/requirements.txt; 
+          else 
+            echo "requirements.txt no encontrado"; 
+          fi
 
-      # Paso 6: Ejecutar el script Python usando el entorno virtual
+      # Paso 7: Establecer variables de entorno
+      - name: Set environment variables
+        run: |
+          echo "ENDPOINT='geotaxi.cxeui44s4lo7.us-east-1.rds.amazonaws.com'" >> $GITHUB_ENV
+          echo "DB_USER='geotaxi'" >> $GITHUB_ENV
+          echo "DB_PASSWORD='geotaxi1234'" >> $GITHUB_ENV
+      
+      # Paso 8: Ejecutar el script Python usando el entorno virtual
       - name: Run Python script
+        env:
+          ENDPOINT: ${{ secrets.DB_ENDPOINT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           source ~/actions-runner/_work/Geotaxi/Geotaxi_new/venv/bin/activate
           python ~/actions-runner/_work/Geotaxi/Geotaxi_new/geotaxi.py  # Reemplaza 'geotaxi.py' con el nombre de tu script Python
 
-      # Paso 7: Verificar que el archivo index.html esté en la ubicación correcta
+      # Paso 9: Verificar que el archivo index.html esté en la ubicación correcta
       - name: Verify index.html
         run: |
           cd ~/actions-runner/_work/Geotaxi/Geotaxi_new
