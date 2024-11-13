@@ -36,7 +36,7 @@ connection_pool = pooling.MySQLConnectionPool(
 )
 
 # Configuration for WebSocket Throttling
-NOTIFICATION_THRESHOLD = 5  # Send notifications at most every 5 seconds
+NOTIFICATION_THRESHOLD = 5  
 last_notification_time = time.time()
 
 def hash_message(message):
