@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Insert your title</title>
+    <link rel="icon" href="http://geotaxi.ddns.net/icon/titleicon3.png" type="image/png">
+    <link rel="stylesheet" href="addandhist.css">
+    <script src="addandhist.js" defer></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Main Title for the page -->
+        <h1>Historical Data Query</h1>
+
+        <!-- Link to go back to the home page -->
+        <div id="link-container">
+            <button class="btn-link" onclick="window.location.href='index.html'">Back to Home</button>
+        </div>
+
+        <!-- Section to input start and end date and time for the query -->
+        <div class="flex-row">
+            <div>
+                <label for="start-datetime">Start Date and Time:</label>
+                <input type="datetime-local" id="start-datetime" required>
+            </div>
+            <div>
+                <label for="end-datetime">End Date and Time:</label>
+                <input type="datetime-local" id="end-datetime" required>
+            </div>
+            <!-- Button to load historical data based on the selected time range -->
+            <button onclick="loadHistory()">Load History</button>
+        </div>
+
+        <!-- Dropdown to select an alias (ID) -->
+        <div>
+            <label for="alias-selector">Select an ID:</label>
+            <select id="alias-selector"></select>
+        </div>
+
+        <!-- Slider for selecting a value (typically for historical data) -->
+        <div id="slider-container">
+            <input type="range" id="slider" min="0" max="100" value="0" step="1" oninput="updateMarkerPosition(this.value)">
+            <span id="slider-value"></span>
+        </div>
+
+        <!-- Popup to display selected data such as alias, date, speed, RPM, and fuel -->
+        <div id="popup" class="popup" style="display: none;">
+            <div id="popup-content">
+                <span id="popup-close" onclick="closePopup()">✖</span>
+                <p id="popup-alias"></p>
+                <p id="popup-date-time"></p>
+                <p id="popup-speed"></p> 
+                <p id="popup-rpm"></p>
+                <p id="popup-fuel"></p> 
+            </div>
+        </div>
+
+        <!-- Section to display the map and results -->
+        <div id="map-and-results">
+            <div id="map"></div>
+        </div>
+    </div>
+</body>
+
+</html>
