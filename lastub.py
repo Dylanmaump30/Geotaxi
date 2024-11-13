@@ -1,10 +1,9 @@
-# Import necessary libraries
-from flask import Flask, jsonify  # Flask for creating the API and jsonify for returning JSON responses
-import mysql.connector  # MySQL connector for database interactions
-from datetime import datetime  # For handling date and time formats
-from flask_cors import CORS  # For enabling Cross-Origin Resource Sharing (CORS)
-import os  # To interact with the environment variables
-from dotenv import load_dotenv  # To load environment variables from a .env file
+from flask import Flask, jsonify, request
+import mysql.connector
+from datetime import datetime, timedelta, time
+from flask_cors import CORS
+import os
+from dotenv import load_dotenv
 
 # Load environment variables from a .env file
 load_dotenv()
