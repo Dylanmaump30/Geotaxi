@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">obd</string>
+    <string-array name="vehicle_modes">
+        <item>GPS y OBD</item>
+        <item>Solo GPS</item>
+    </string-array>
+</resources>
